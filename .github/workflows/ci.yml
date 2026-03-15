@@ -18,16 +18,17 @@ jobs:
       - name: Build Application (If Any)
         run: echo "Building application artifact..."
 
-  test-stage:
+   test-stage:
     name: 2.2 Test Stage
     needs: build-stage
     runs-on: self-hosted
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
-      - name: Run Automated Unit Testing
+      - name: Install Dependencies
+        run: npm install
+      - name: Run Unit Test
         run: npm test
-
   release-stage:
     name: 2.3 Release Stage
     needs: test-stage
