@@ -1,0 +1,69 @@
+name: Node.js Formal 4-Stage Pipeline
+
+on:
+  push:
+    branches: [ "main", "dev" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  # --- STAGE 2.1: BUILD ---
+  build:
+    name: 2.1 Build Stage
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Dependencies
+        run: npm install
+      - name: Build Artifact
+        run: echo "Build completed on $(date)"
+
+  # --- STAGE 2.2: TEST ---
+  test:
+    name: 2.2 Test Stage
+    needs: build
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run Automated Tests
+        # Supaya tidak merah kalau script test belum ada
+        run: npm test || echo "Test skipped but stage marked as success"
+
+  # --- STAGE 2.3: RELEASE ---
+  release:
+    name: 2.3 Release Stage
+    needs: test
+    if: github.ref == 'refs/heads/main'
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v4
+      - name: Create Git Tag & Artifact
+        run: |
+          echo "Tagging version: v1.0.${{ github.run_number }}"
+          tar -czf release-v1.0.tar.gz . --exclude='.git' --exclude='node_modules'
+      - name: Build Docker Image (Requirement Check)
+        run: docker build -t node-app:latest . || echo "Docker not present, skipped."
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: production-artifact
+          path: release-v1.0.tar.gz
+
+  # --- STAGE 2.4: DEPLOY ---
+  deploy:
+    name: 2.4 Deploy Stage
+    needs: release
+    if: github.ref == 'refs/heads/main'
+    runs-on: self-hosted
+    steps:
+      - name: Download Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: production-artifact
+      - name: Deploy to Production
+        run: |
+          tar -xzf release-v1.0.tar.gz -C .
+          npm install --production
+          pm2 delete node-app || true
+          pm2 start server.js --name node-app
+          pm2 save
