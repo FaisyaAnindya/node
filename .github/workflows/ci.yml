@@ -48,14 +48,17 @@ jobs:
           docker build -t node-app:latest .
           echo "Release Artifact (Docker Image) Created."
 
-  deploy-stage:
+deploy-stage:
     name: 2.4 Deploy Stage
     needs: release-stage
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: self-hosted
     steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
       - name: Deploy to Environment
         run: |
-          docker-compose down || true
+          docker-compose down --remove-orphans || true
+          docker rm -f mysql-db express-backend || true
           docker-compose up -d
           echo "Application Deployed Successfully via Docker Compose."
