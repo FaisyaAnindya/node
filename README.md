@@ -1,6 +1,6 @@
 # Node.js Rest APIs with Express & MySQL example
 
-For instruction, please visit:
+For instruction, please, visit:
 > [Build Node.js Rest APIs with Express & MySQL](https://www.bezkoder.com/node-js-rest-api-express-mysql/)
 
 Front-end that works well with this Back-end
