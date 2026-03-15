@@ -13,22 +13,27 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
+
       - name: Install Dependencies
         run: npm install
-      - name: Build Application (If Any)
+
+      - name: Build Application
         run: echo "Building application artifact..."
 
-   test-stage:
+  test-stage:
     name: 2.2 Test Stage
     needs: build-stage
     runs-on: self-hosted
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
+
       - name: Install Dependencies
         run: npm install
+
       - name: Run Unit Test
         run: npm test
+
   release-stage:
     name: 2.3 Release Stage
     needs: test-stage
@@ -37,10 +42,12 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
+
       - name: Build Docker Image
         run: |
           docker build -t node-app:latest .
           echo "Release Artifact (Docker Image) Created."
+
   deploy-stage:
     name: 2.4 Deploy Stage
     needs: release-stage
